@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Scroll Demo — Inspired by landonorris.com</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;700;900&display=swap" rel="stylesheet" />
+  <style>
+    /* ===== RESET & BASE ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #111111;
+      --accent: #c8f000;
+      --text: #f0ede8;
+      --muted: rgba(240, 237, 232, 0.4);
+      --font-display: 'Bebas Neue', sans-serif;
+      --font-body: 'Inter', sans-serif;
+    }
+
+    html { scroll-behavior: auto; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      overflow-x: hidden;
+    }
+
+    /* ===== SCROLLABLE SPACER ===== */
+    #scroll-driver {
+      height: 350vh;
+      position: relative;
+    }
+
+    /* ===== STICKY HERO WRAPPER ===== */
+    #hero-sticky {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      width: 100%;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg);
+    }
+
+    /* ===== BACKGROUND MARQUEE TEXT ===== */
+    #bg-marquee {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .marquee-track {
+      display: flex;
+      gap: 5rem;
+      white-space: nowrap;
+      animation: marquee-scroll 22s linear infinite;
+      opacity: 0;
+      transition: opacity 1s ease;
+    }
+
+    .marquee-track.visible { opacity: 1; }
+
+    .marquee-track span {
+      font-family: var(--font-display);
+      font-size: clamp(6rem, 14vw, 13rem);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: transparent;
+      -webkit-text-stroke: 1.5px rgba(255,255,255,0.06);
+      user-select: none;
+      flex-shrink: 0;
+    }
+
+    @keyframes marquee-scroll {
+      from { transform: translateX(0); }
+      to   { transform: translateX(-50%); }
+    }
+
+    /* ===== HERO IMAGE WRAPPER ===== */
+    #hero-image-wrap {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      overflow: hidden;
+      transform-origin: center center;
+      will-change: transform, border-radius;
+    }
+
+    #hero-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center 30%;
+      display: block;
+      transform-origin: center center;
+      will-change: filter, transform;
+    }
+
+    /* Dark vignette overlay */
+    #hero-vignette {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.65) 100%);
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    /* Scroll-driven darkness overlay */
+    #hero-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0);
+      z-index: 3;
+      pointer-events: none;
+      will-change: background;
+    }
+
+    /* ===== SIGNATURE (top-center) ===== */
+    #signature-wrap {
+      position: absolute;
+      top: 2.2rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(-8px);
+      z-index: 20;
+      opacity: 0;
+      will-change: opacity, transform;
+    }
+
+    #signature-svg {
+      width: clamp(140px, 20vw, 240px);
+      height: auto;
+      overflow: visible;
+      filter: drop-shadow(0 0 12px rgba(200, 240, 0, 0.5));
+    }
+
+    #signature-svg path {
+      fill: none;
+      stroke: var(--accent);
+      stroke-width: 2.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    /* ===== HERO TEXT OVERLAY (center) ===== */
+    #hero-center-text {
+      position: absolute;
+      bottom: 3.5rem;
+      left: 3rem;
+      z-index: 10;
+      opacity: 0;
+      transform: translateY(12px);
+      will-change: opacity, transform;
+    }
+
+    #hero-center-text .tagline {
+      font-family: var(--font-display);
+      font-size: clamp(2.8rem, 6vw, 5.5rem);
+      line-height: 0.95;
+      letter-spacing: 0.02em;
+      color: var(--text);
+      text-shadow: 0 2px 30px rgba(0,0,0,0.6);
+    }
+
+    #hero-center-text .tagline em {
+      font-style: normal;
+      color: var(--accent);
+    }
+
+    /* ===== PHOTO LABEL ===== */
+    #photo-label {
+      position: absolute;
+      bottom: 2rem;
+      right: 2.5rem;
+      z-index: 20;
+      font-size: 0.6rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--muted);
+      opacity: 0;
+      transition: opacity 0.5s;
+    }
+
+    #photo-label.visible { opacity: 1; }
+
+    /* ===== SCROLL HINT ===== */
+    #scroll-hint {
+      position: absolute;
+      bottom: 2.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 20;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.6rem;
+      opacity: 1;
+      transition: opacity 0.4s;
+    }
+
+    #scroll-hint span {
+      font-size: 0.6rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    #scroll-hint .arrow {
+      width: 1px;
+      height: 44px;
+      background: linear-gradient(to bottom, rgba(200,240,0,0.6), transparent);
+      animation: arrow-pulse 1.8s ease-in-out infinite;
+    }
+
+    @keyframes arrow-pulse {
+      0%, 100% { opacity: 1; transform: scaleY(1) translateY(0); }
+      50%       { opacity: 0.3; transform: scaleY(0.5) translateY(4px); }
+    }
+
+    /* ===== NAV ===== */
+    #nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.6rem 2.5rem;
+      pointer-events: none;
+    }
+
+    #nav .logo {
+      font-family: var(--font-display);
+      font-size: 1.1rem;
+      letter-spacing: 0.12em;
+      color: var(--text);
+      opacity: 0;
+      transition: opacity 0.7s;
+      pointer-events: auto;
+    }
+
+    #nav .logo.visible { opacity: 1; }
+
+    #nav .nav-right {
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--muted);
+      opacity: 0;
+      transition: opacity 0.7s;
+      pointer-events: auto;
+    }
+
+    #nav .nav-right.visible { opacity: 1; }
+
+    /* ===== CONTENT BELOW HERO ===== */
+    #content {
+      position: relative;
+      z-index: 5;
+      padding: 10rem 3rem 8rem;
+    }
+
+    .content-inner {
+      max-width: 1000px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4rem;
+      align-items: start;
+    }
+
+    @media (max-width: 700px) {
+      .content-inner { grid-template-columns: 1fr; gap: 2.5rem; }
+    }
+
+    #content h2 {
+      font-family: var(--font-display);
+      font-size: clamp(3.5rem, 7vw, 6.5rem);
+      font-weight: 400;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      line-height: 0.95;
+      color: var(--text);
+    }
+
+    #content h2 em {
+      font-style: normal;
+      color: var(--accent);
+    }
+
+    .content-right {
+      padding-top: 1.5rem;
+    }
+
+    .content-right .quote {
+      font-size: 1.05rem;
+      line-height: 1.75;
+      color: var(--muted);
+      margin-bottom: 2rem;
+      font-style: italic;
+    }
+
+    .content-right .divider {
+      width: 40px;
+      height: 2px;
+      background: var(--accent);
+      margin-bottom: 1.5rem;
+    }
+
+    .content-right p {
+      font-size: 0.9rem;
+      line-height: 1.8;
+      color: rgba(240,237,232,0.25);
+      letter-spacing: 0.02em;
+    }
+
+    /* Grain texture overlay */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 9999;
+      opacity: 0.35;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Fixed nav -->
+  <nav id="nav">
+    <div class="logo" id="nav-logo">SCROLL DEMO</div>
+    <div class="nav-right" id="nav-right">2024 — Portfolio</div>
+  </nav>
+
+  <!-- Scroll-driven hero section -->
+  <section id="scroll-driver">
+    <div id="hero-sticky">
+
+      <!-- Background marquee text -->
+      <div id="bg-marquee">
+        <div class="marquee-track" id="marquee-track">
+          <span>REDEFINING LIMITS</span>
+          <span>&nbsp;·&nbsp;</span>
+          <span>FIGHTING FOR WINS</span>
+          <span>&nbsp;·&nbsp;</span>
+          <span>DEFINING A LEGACY</span>
+          <span>&nbsp;·&nbsp;</span>
+          <span>REDEFINING LIMITS</span>
+          <span>&nbsp;·&nbsp;</span>
+          <span>FIGHTING FOR WINS</span>
+          <span>&nbsp;·&nbsp;</span>
+          <span>DEFINING A LEGACY</span>
+          <span>&nbsp;·&nbsp;</span>
+        </div>
+      </div>
+
+      <!-- Hero image -->
+      <div id="hero-image-wrap">
+        <img id="hero-image" src="profile.jpg" alt="Hero" />
+        <div id="hero-vignette"></div>
+        <div id="hero-overlay"></div>
+      </div>
+
+      <!-- Signature (top center, appears on scroll) -->
+      <div id="signature-wrap">
+        <svg id="signature-svg" viewBox="0 0 280 90" xmlns="http://www.w3.org/2000/svg">
+          <!-- Stylised cursive "LN" signature -->
+          <!-- L: tall vertical with base serif -->
+          <path id="sig-p1" d="
+            M 22 12
+            C 20 16, 18 22, 17 30
+            C 15 42, 14 56, 15 66
+            C 16 72, 18 76, 22 78
+            C 30 80, 46 79, 60 78
+            C 68 77, 75 76, 80 75
+          "/>
+          <!-- connecting flourish -->
+          <path id="sig-p2" d="
+            M 80 75
+            C 86 73, 90 70, 93 66
+            C 96 62, 97 56, 97 50
+          "/>
+          <!-- N: up-down-diagonal-up -->
+          <path id="sig-p3" d="
+            M 97 50
+            C 97 42, 98 30, 100 20
+            C 102 13, 105 10, 108 12
+            C 114 16, 124 34, 133 52
+            C 140 66, 145 76, 148 78
+            C 150 80, 153 79, 155 76
+            C 158 70, 160 58, 161 44
+            C 162 32, 161 20, 160 14
+          "/>
+          <!-- trailing flourish / underline -->
+          <path id="sig-p4" d="
+            M 160 14
+            C 162 12, 165 11, 168 12
+            C 174 15, 182 24, 190 36
+            C 196 46, 200 56, 202 64
+            C 204 70, 204 74, 202 76
+            C 200 78, 196 77, 192 74
+          "/>
+          <!-- dot accent -->
+          <path id="sig-p5" d="
+            M 215 68
+            C 217 65, 220 63, 224 63
+            C 228 63, 231 65, 232 68
+            C 233 71, 231 74, 228 75
+            C 225 76, 222 75, 220 73
+          "/>
+        </svg>
+      </div>
+
+      <!-- Bottom-left text that appears mid-scroll -->
+      <div id="hero-center-text">
+        <div class="tagline">
+          Redefining<br /><em>limits</em>
+        </div>
+      </div>
+
+      <!-- Photo label -->
+      <div id="photo-label">RACING SPIRIT — 2024</div>
+
+      <!-- Scroll hint -->
+      <div id="scroll-hint">
+        <span>Scroll</span>
+        <div class="arrow"></div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Content below -->
+  <section id="content">
+    <div class="content-inner">
+      <h2>Redefining<br /><em>limits</em>,<br />fighting<br />for wins.</h2>
+      <div class="content-right">
+        <p class="quote">
+          "It doesn't matter where you start — it's how you progress from there."
+        </p>
+        <div class="divider"></div>
+        <p>
+          Every corner, every lap, every season is a chance to push further
+          than you thought possible. This is what drives the pursuit of greatness
+          on and off the track.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- GSAP CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+
+  <script>
+    gsap.registerPlugin(ScrollTrigger);
+
+    /* ─── Element refs ─── */
+    const imageWrap     = document.getElementById('hero-image-wrap');
+    const heroImage     = document.getElementById('hero-image');
+    const overlay       = document.getElementById('hero-overlay');
+    const sigWrap       = document.getElementById('signature-wrap');
+    const marqueeTrack  = document.getElementById('marquee-track');
+    const scrollHint    = document.getElementById('scroll-hint');
+    const navLogo       = document.getElementById('nav-logo');
+    const navRight      = document.getElementById('nav-right');
+    const photoLabel    = document.getElementById('photo-label');
+    const heroText      = document.getElementById('hero-center-text');
+
+    /* ─── SVG signature: measure path lengths ─── */
+    const sigPathIds = ['sig-p1','sig-p2','sig-p3','sig-p4','sig-p5'];
+    const sigPaths = sigPathIds.map(id => {
+      const el = document.getElementById(id);
+      const len = el.getTotalLength();
+      el.style.strokeDasharray  = len;
+      el.style.strokeDashoffset = len;  // fully hidden initially
+      return { el, len };
+    });
+
+    /* ─── Easing helpers ─── */
+    function easeInOut(t) {
+      return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+    }
+
+    function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+
+    function remap(v, inLo, inHi, outLo, outHi) {
+      return outLo + (outHi - outLo) * clamp((v - inLo) / (inHi - inLo), 0, 1);
+    }
+
+    /* ─── Main scroll handler ─── */
+    ScrollTrigger.create({
+      trigger: '#scroll-driver',
+      start: 'top top',
+      end: 'bottom bottom',
+      scrub: 1.0,
+      onUpdate(self) {
+        const p = self.progress;
+
+        /* ── 1. IMAGE SCALE: 1.0 → 0.40 (over 0–70% of scroll) ── */
+        const scaleRaw = remap(p, 0, 0.7, 1.0, 0.40);
+        const scale    = easeInOut(clamp(scaleRaw, 0.40, 1.0));
+        const radius   = remap(p, 0.05, 0.7, 0, 18);
+        imageWrap.style.transform    = `scale(${scale})`;
+        imageWrap.style.borderRadius = `${radius}px`;
+        imageWrap.style.overflow     = 'hidden';
+
+        /* ── 2. GRAYSCALE: 0 → 1 (starts 25%, ends 65%) ── */
+        const gray = easeInOut(remap(p, 0.25, 0.65, 0, 1));
+        heroImage.style.filter = `grayscale(${gray}) brightness(${remap(p, 0.3, 0.8, 1, 0.85)})`;
+
+        /* ── 3. OVERLAY DARKNESS ── */
+        const dark = remap(p, 0.05, 0.6, 0, 0.5);
+        overlay.style.background = `rgba(0,0,0,${dark})`;
+
+        /* ── 4. SIGNATURE: fade + draw (15%–55%) ── */
+        const sigAlpha = easeInOut(remap(p, 0.15, 0.55, 0, 1));
+        const sigY     = remap(p, 0.15, 0.45, -10, 0);
+        sigWrap.style.opacity   = sigAlpha;
+        sigWrap.style.transform = `translateX(-50%) translateY(${sigY}px)`;
+
+        // Draw each path segment sequentially
+        sigPaths.forEach(({ el, len }, i) => {
+          const segStart = i * 0.18;
+          const segEnd   = segStart + 0.45;
+          const sp       = easeInOut(remap(sigAlpha, segStart, segEnd, 0, 1));
+          el.style.strokeDashoffset = len * (1 - sp);
+        });
+
+        /* ── 5. MARQUEE TEXT: appears 45%–70% ── */
+        const marqueeAlpha = easeInOut(remap(p, 0.45, 0.70, 0, 1));
+        marqueeTrack.style.opacity = marqueeAlpha;
+
+        /* ── 6. HERO TEXT (bottom-left): appears 35%–60% ── */
+        const textAlpha = easeInOut(remap(p, 0.35, 0.60, 0, 1));
+        const textY     = remap(p, 0.35, 0.60, 14, 0);
+        heroText.style.opacity   = textAlpha;
+        heroText.style.transform = `translateY(${textY}px)`;
+
+        /* ── 7. SCROLL HINT: fades out quickly ── */
+        scrollHint.style.opacity = clamp(1 - p * 10, 0, 1);
+
+        /* ── 8. NAV elements ── */
+        const navAlpha = easeInOut(remap(p, 0.10, 0.30, 0, 1));
+        navLogo.style.opacity  = navAlpha;
+        navRight.style.opacity = navAlpha;
+
+        /* ── 9. PHOTO LABEL ── */
+        const labelAlpha = easeInOut(remap(p, 0.55, 0.75, 0, 1));
+        photoLabel.style.opacity = labelAlpha;
+      }
+    });
+
+    /* ─── Subtle parallax on the image ─── */
+    gsap.to(heroImage, {
+      yPercent: -12,
+      ease: 'none',
+      scrollTrigger: {
+        trigger: '#scroll-driver',
+        start: 'top top',
+        end: 'bottom bottom',
+        scrub: true
+      }
+    });
+
+    /* ─── Content section fade-in ─── */
+    gsap.from('#content h2', {
+      opacity: 0,
+      y: 50,
+      duration: 1.2,
+      ease: 'power3.out',
+      scrollTrigger: {
+        trigger: '#content',
+        start: 'top 80%',
+        toggleActions: 'play none none none'
+      }
+    });
+
+    gsap.from('.content-right', {
+      opacity: 0,
+      y: 40,
+      duration: 1.2,
+      delay: 0.2,
+      ease: 'power3.out',
+      scrollTrigger: {
+        trigger: '#content',
+        start: 'top 80%',
+        toggleActions: 'play none none none'
+      }
+    });
+  </script>
+</body>
+</html>
