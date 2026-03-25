@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Andy Yu | Creative Portfolio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;500;800&family=Oswald:wght@300;400&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-base: #020617;
+            --accent-blue: #3b82f6;
+            --glass: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: var(--bg-base);
+            color: var(--text-primary);
+            font-family: 'Inter', -apple-system, sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* --- 苹果风导航栏 --- */
+        nav {
+            position: fixed; top: 0; width: 100%; height: 64px;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0 8%; background: rgba(2, 6, 23, 0.5);
+            backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+            border-bottom: 1px solid var(--glass-border); z-index: 2000;
+        }
+        .logo { font-weight: 800; font-size: 1.1rem; letter-spacing: -1px; }
+
+        /* =====================================================
+           场景 1：高级蓝区域 (原本的内容保持不动)
+           ===================================================== */
+        .main-content {
+            position: relative;
+            z-index: 2; /* 确保在最上层 */
+            /* 学习点：使用你提供的 fixed 效果思路，让渐变背景更稳定 */
+            background: radial-gradient(circle at 50% -20%, #1e3a8a 0%, #020617 80%) no-repeat center center fixed;
+            background-size: cover;
+            padding-bottom: 100px;
+        }
+
+        .hero {
+            height: 100vh; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; text-align: center;
+        }
+        .hero h1 {
+            font-size: clamp(4rem, 12vw, 8rem); font-weight: 800;
+            letter-spacing: -4px; line-height: 0.9;
+            background: linear-gradient(to bottom, #fff, #475569);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            margin-bottom: 24px;
+        }
+
+        .container { padding: 100px 8%; }
+        .portfolio-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 40px; }
+
+        /* 玻璃卡片 */
+        .card {
+            position: relative; height: 500px; border-radius: 32px;
+            background: var(--glass); border: 1px solid var(--glass-border);
+            overflow: hidden; opacity: 0; transform: translateY(60px);
+            transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1), box-shadow 0.6s, opacity 0.8s;
+        }
+        .card.in-view { opacity: 1; transform: translateY(0); }
+        .card:hover { transform: scale(1.02); box-shadow: 0 30px 60px rgba(0,0,0,0.5); }
+        .card-info { position: absolute; bottom: 40px; left: 40px; }
+        .card-title { font-size: 2rem; font-weight: 500; }
+        .light-blob { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at var(--x) var(--y), rgba(59, 130, 246, 0.15), transparent 40%); pointer-events: none; }
+
+        /* =====================================================
+           场景 2：云层 Block (学习你提供的 CSS 背景固定效果)
+           ===================================================== */
+        .cloud-block {
+            position: relative;
+            z-index: 10; /* 高层，用来遮挡 main-content */
+            height: 100vh;
+            
+            /* 学习点：核心变换。这里使用了你提供的背景固定逻辑 */
+            background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.9)), 
+                        url('https://68.media.tumblr.com/d3fd545cd977a174beef12c1106880bf/tumblr_nt505iKkul1ud7rr3o1_1280.jpg') 
+                        no-repeat center center fixed;
+            background-size: cover;
+            
+            /* 物理遮挡阴影 */
+            box-shadow: 0 -50px 100px rgba(0,0,0,0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        /* 嵌入原本的云层粒子动画 */
+        .clouds-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            opacity: 0.3; pointer-events: none;
+        }
+        .cloud-layer { background-repeat: repeat-x; position: absolute; inset: 0; height: 100%; }
+        .c1 { background-image: url("https://s.cdpn.io/15514/clouds_2.png"); animation: slide 20s linear infinite; }
+        .c2 { background-image: url("https://s.cdpn.io/15514/clouds_1.png"); animation: slide 15s linear infinite; }
+        @keyframes slide { from { background-position: 0 0; } to { background-position: -1000px 0; } }
+
+        .quote {
+            font-family: 'Oswald', sans-serif; font-size: 3rem; text-align: center;
+            color: white; text-transform: uppercase; z-index: 15;
+            text-shadow: 2px 2px 20px rgba(0,0,0,1); /* 学习你 CSS 里的文字阴影 */
+        }
+
+    </style>
+</head>
+<body>
+
+    <nav><div class="logo">ANDY YU</div></nav>
+
+    <div class="main-content">
+        <section class="hero">
+            <h1>ANDY<br>YU.</h1>
+            <p style="color:var(--text-secondary)">Designer, Coder & Creative Thinker.</p>
+        </section>
+
+        <div class="container">
+            <div class="portfolio-grid">
+                <div class="card"><div class="light-blob"></div><div class="card-info"><div class="card-title">Projects</div></div></div>
+                <div class="card"><div class="light-blob"></div><div class="card-info"><div class="card-title">Design</div></div></div>
+                <div class="card"><div class="light-blob"></div><div class="card-info"><div class="card-title">Art</div></div></div>
+                <div class="card"><div class="light-blob"></div><div class="card-info"><div class="card-title">Life</div></div></div>
+            </div>
+        </div>
+    </div>
+
+    <section class="cloud-block">
+        <div class="clouds-overlay">
+            <div class="cloud-layer c1"></div>
+            <div class="cloud-layer c2"></div>
+        </div>
+        <h1 class="quote">What do you have<br>to be scared of?</h1>
+    </section>
+
+    <script>
+        // 滚动淡入
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => { if (entry.isIntersecting) entry.target.classList.add('in-view'); });
+        }, { threshold: 0.1 });
+        document.querySelectorAll('.card').forEach(card => observer.observe(card));
+
+        // 鼠标光影
+        document.querySelectorAll('.card').forEach(card => {
+            card.onmousemove = e => {
+                const rect = card.getBoundingClientRect();
+                card.querySelector('.light-blob').style.setProperty('--x', `${e.clientX - rect.left}px`);
+                card.querySelector('.light-blob').style.setProperty('--y', `${e.clientY - rect.top}px`);
+            };
+        });
+    </script>
+</body>
+</html>
